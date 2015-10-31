@@ -6,11 +6,12 @@ import (
 )
 
 type Service struct {
-	Ping             *Ping
-	Status           string
-	MonitorStatus    string
-	Interval         time.Duration
-	CriticalInterval time.Duration
+	Ping                  *Ping
+	Status                string
+	MonitorStatus         string
+	Interval              time.Duration
+	CriticalInterval      time.Duration
+	RestartAfterNCritical int
 
 	CommandStart *Command
 	CommandStop  *Command
@@ -26,6 +27,7 @@ func NewService() *Service {
 	s.cstate = make(chan string)
 	s.Interval = 15 * time.Millisecond
 	s.CriticalInterval = 1 * time.Millisecond
+	s.RestartAfterNCritical = 3
 	return s
 }
 
@@ -37,8 +39,11 @@ func (s *Service) KeepAlive() {
 			case <-time.After(s.Interval):
 				e := s.Ping.Check()
 				if e != nil {
-					s.criticalFound++
 					s.Status = s.Ping.LastStatus
+					s.criticalFound++
+					if s.criticalFound == s.RestartAfterNCritical {
+						s.bringItUp()
+					}
 				} else {
 					s.criticalFound = 0
 				}
