@@ -18,7 +18,4 @@ func TestMongo(t *testing.T) {
 	}()
 
 	svc.KeepAlive()
-
-	done := false
-	time.Sleep(100 * time.Minute)
 }
