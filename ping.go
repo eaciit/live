@@ -45,7 +45,7 @@ func (p *Ping) Check() error {
 		return p.checkNetwork()
 	} else if pingType == PingType_HttpStatus {
 		return p.checkHttpStatus()
-	} else if pingType == PingType_HttpStatus {
+	} else if pingType == PingType_HttpBody {
 		return p.checkHttpStatus()
 	} else if pingType == PingType_Command {
 		return p.checkCommand()
