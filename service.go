@@ -2,6 +2,7 @@ package live
 
 import (
 	"fmt"
+	"github.com/eaciit/toolkit"
 	"strings"
 	"time"
 )
@@ -17,6 +18,7 @@ type Service struct {
 
 	CommandStart *Command
 	CommandStop  *Command
+	LogEngine    *toolkit.LogEngine
 
 	criticalFound int
 
@@ -33,9 +35,18 @@ func NewService() *Service {
 	return s
 }
 
+func (s *Service) addLog(logtxt string, logtype string) {
+	if s.LogEngine == nil {
+		le, _ := toolkit.NewLog(true, false, "", "", "")
+		s.LogEngine = le
+	}
+	s.LogEngine.AddLog(logtxt, logtype)
+}
+
 func (s *Service) KeepAlive() {
 	s.MonitorStatus = "Running"
 	s.Status = "OK"
+	s.addLog(fmt.Sprintf("Service %s live monitor started", s.Name), "INFO")
 	go func(s *Service) {
 		for s.MonitorStatus == "Running" {
 			select {
@@ -45,13 +56,18 @@ func (s *Service) KeepAlive() {
 					if e != nil {
 						s.Status = s.Ping.LastStatus
 						s.criticalFound++
-						fmt.Printf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error())
+						s.addLog(fmt.Sprintf("Service %s check fails - %d. Error: %s \n",
+							s.Name, s.criticalFound, e.Error()), "WARNING")
 						if s.criticalFound == s.RestartAfterNCritical {
 							e = s.bringItUp()
 							if e != nil {
-								fmt.Printf("[%v] Service %s restart fails - %d. Error: %s \n", time.Now(), s.Name, 1, e.Error())
+								s.addLog(
+									fmt.Sprintf("Service %s restart fails - %d. Error: %s \n", s.Name, 1, e.Error()),
+									"ERROR")
 							} else {
-								fmt.Printf("[%v] Service %s restarted successfully \n", time.Now(), s.Name)
+								s.addLog(
+									fmt.Sprintf("Service %s restarted successfully \n", s.Name),
+									"INFO")
 								s.criticalFound = 0
 								s.Status = "OK"
 							}
@@ -60,9 +76,9 @@ func (s *Service) KeepAlive() {
 						s.criticalFound = 0
 					}
 				} else if s.criticalFound == s.RestartAfterNCritical {
-					fmt.Printf("[%v] Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
-						time.Now(),
-						s.RestartAfterNCritical)
+					s.addLog(
+						fmt.Sprintf("Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
+							s.RestartAfterNCritical), "ERROR")
 					s.criticalFound++
 					s.StopMonitor()
 				}
