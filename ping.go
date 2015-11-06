@@ -40,19 +40,20 @@ type Ping struct {
 }
 
 func (p *Ping) Check() error {
+	var e error
 	pingType := p.Type
 	if pingType == PingType_Network {
-		return p.checkNetwork()
+		e = p.checkNetwork()
 	} else if pingType == PingType_HttpStatus {
-		return p.checkHttpStatus()
+		e = p.checkHttpStatus()
 	} else if pingType == PingType_HttpBody {
-		return p.checkHttpStatus()
+		e = p.checkHttpStatus()
 	} else if pingType == PingType_Command {
-		return p.checkCommand()
+		e = p.checkCommand()
 	} else if pingType == PingType_Custom {
-		return p.checkCustom()
+		e = p.checkCustom()
 	}
-	return nil
+	return e
 }
 
 func (p *Ping) checkNetwork() error {

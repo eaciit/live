@@ -35,6 +35,7 @@ func NewService() *Service {
 
 func (s *Service) KeepAlive() {
 	s.MonitorStatus = "Running"
+	s.Status = "OK"
 	go func(s *Service) {
 		for s.MonitorStatus == "Running" {
 			select {
@@ -46,7 +47,14 @@ func (s *Service) KeepAlive() {
 						s.criticalFound++
 						fmt.Printf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error())
 						if s.criticalFound == s.RestartAfterNCritical {
-							s.bringItUp()
+							e = s.bringItUp()
+							if e != nil {
+								fmt.Printf("[%v] Service %s restart fails - %d. Error: %s \n", time.Now(), s.Name, 1, e.Error())
+							} else {
+								fmt.Printf("[%v] Service %s restarted successfully \n", time.Now(), s.Name)
+								s.criticalFound = 0
+								s.Status = "OK"
+							}
 						}
 					} else {
 						s.criticalFound = 0
@@ -86,10 +94,9 @@ func (s *Service) receiveState() {
 func (s *Service) bringItUp() error {
 	var e error
 
-	if s.Status != "Stop" {
-		e = s.CommandStart.Exec()
-		if e != nil {
-			return e
+	if s.Status == "OK" {
+		if s.CommandStop != nil {
+			s.CommandStop.Exec()
 		}
 	}
 
@@ -97,5 +104,6 @@ func (s *Service) bringItUp() error {
 	if e != nil {
 		return e
 	}
+
 	return nil
 }
