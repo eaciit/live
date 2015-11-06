@@ -3,8 +3,8 @@ package live
 import (
 	"fmt"
 	"github.com/eaciit/toolkit"
-	"ioutil"
-	"net/http"
+	//"io/ioutil"
+	//"net/http"
 	"strings"
 )
 
@@ -36,7 +36,7 @@ type Ping struct {
 	HttpBodyType   HttpBodyEnum
 	HttpBodySearch string
 
-	FnPing func(*ping) error
+	FnPing func(*Ping) error
 }
 
 func (p *Ping) Check() error {
@@ -50,7 +50,7 @@ func (p *Ping) Check() error {
 	} else if pingType == PingType_Command {
 		return p.checkCommand()
 	} else if pingType == PingType_Custom {
-		return p.checkCustom(p.FnPing)
+		return p.checkCustom()
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func (p *Ping) checkNetwork() error {
 func (p *Ping) checkHttpStatus() error {
 	r, e := toolkit.HttpCall(p.Host, "GET", nil, false, "", "")
 	if e != nil {
-		return e
+		return fmt.Errorf("Unable to access %s, %s", p.Host, e.Error())
 	}
 	if r.StatusCode != 200 {
 		return fmt.Errorf("Unable to access %s, code: %d status: %s", p.Host, r.StatusCode, r.Status)
@@ -80,7 +80,7 @@ func (p *Ping) checkHttpBody() error {
 		if !strings.Contains(body, p.HttpBodySearch) {
 			return fmt.Errorf("Phrase %s could not be found on response body", p.HttpBodySearch)
 		}
-	} else if p.HttpBodySearch == HttpBody_Equals {
+	} else if p.HttpBodyType == HttpBody_Equals {
 		if body != p.HttpBodySearch {
 			return fmt.Errorf("Response is not valid. Expecting for %s", p.HttpBodySearch)
 		}
@@ -94,7 +94,7 @@ func (p *Ping) checkCommand() error {
 	return nil
 }
 
-func (p *Ping) checkCustom(fn func(*ping) error) {
+func (p *Ping) checkCustom() error {
 	if p.FnPing == nil {
 		return nil
 	}

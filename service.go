@@ -1,12 +1,14 @@
 package live
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
 
 type Service struct {
 	Ping                  *Ping
+	Name                  string
 	Status                string
 	MonitorStatus         string
 	Interval              time.Duration
@@ -32,24 +34,37 @@ func NewService() *Service {
 }
 
 func (s *Service) KeepAlive() {
+	s.MonitorStatus = "Running"
 	go func(s *Service) {
-		s.MonitorStatus = "Run"
-		for s.MonitorStatus == "Run" {
+		for s.MonitorStatus == "Running" {
 			select {
 			case <-time.After(s.Interval):
-				e := s.Ping.Check()
-				if e != nil {
-					s.Status = s.Ping.LastStatus
-					s.criticalFound++
-					if s.criticalFound == s.RestartAfterNCritical {
-						s.bringItUp()
+				if s.criticalFound < s.RestartAfterNCritical {
+					e := s.Ping.Check()
+					if e != nil {
+						s.Status = s.Ping.LastStatus
+						s.criticalFound++
+						fmt.Printf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error())
+						if s.criticalFound == s.RestartAfterNCritical {
+							s.bringItUp()
+						}
+					} else {
+						s.criticalFound = 0
 					}
-				} else {
-					s.criticalFound = 0
+				} else if s.criticalFound == s.RestartAfterNCritical {
+					fmt.Printf("[%v] Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
+						time.Now(),
+						s.RestartAfterNCritical)
+					s.criticalFound++
+					s.StopMonitor()
 				}
 			}
 		}
 	}(s)
+}
+
+func (s *Service) StopMonitor() {
+	s.MonitorStatus = "Stop"
 }
 
 func (s *Service) receiveState() {
@@ -82,4 +97,5 @@ func (s *Service) bringItUp() error {
 	if e != nil {
 		return e
 	}
+	return nil
 }
