@@ -48,6 +48,8 @@ func (s *Service) KeepAlive() {
 	s.Status = "OK"
 	s.addLog(fmt.Sprintf("Service %s live monitor started", s.Name), "INFO")
 	go func(s *Service) {
+		defer s.StopMonitor()
+
 		for s.MonitorStatus == "Running" {
 			select {
 			case <-time.After(s.Interval):
@@ -80,7 +82,7 @@ func (s *Service) KeepAlive() {
 						fmt.Sprintf("Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
 							s.RestartAfterNCritical), "ERROR")
 					s.criticalFound++
-					s.StopMonitor()
+					return
 				}
 			}
 		}
@@ -89,6 +91,7 @@ func (s *Service) KeepAlive() {
 
 func (s *Service) StopMonitor() {
 	s.MonitorStatus = "Stop"
+	s.addLog(fmt.Sprintf("Service %s live monitor has been stopped", s.Name), "INFO")
 }
 
 func (s *Service) receiveState() {
