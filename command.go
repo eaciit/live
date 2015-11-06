@@ -14,9 +14,25 @@ const (
 )
 
 type Command struct {
-	Type         CommandTypeEnum
+	Type CommandTypeEnum
+
+	//--- these attributes are used for local command
 	CommandText  string
 	CommandParms []string
+
+	//--- these attributes are used for rest command
+	RESTUrl      string
+	RESTMethod   string
+	RESTUser     string
+	RESTPassword string
+	RESTAuthType string
+
+	//--- attributes used for SSH
+	SSHHost     string
+	SSHUser     string
+	SSHPassword string
+	SSHKeyFile  string
+	SSHAuthType string
 }
 
 func (c *Command) Exec() error {
@@ -31,6 +47,8 @@ func (c *Command) Exec() error {
 			ps = c.CommandParms
 		}
 		_, e = toolkit.RunCommand(c.CommandText, ps...)
+	} else if c.Type == CommandType_SSH {
+	} else if c.Type == CommandType_REST {
 	}
 	return e
 }
