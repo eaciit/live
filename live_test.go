@@ -17,12 +17,13 @@ func TestMongo(t *testing.T) {
 		return p
 	}()
 
+	svc.Name = "MongoDb 3.0 WT Port 27123"
 	svc.RestartAfterNCritical = 3
 	svc.Interval = 1 * time.Second
 	svc.CommandStart = &Command{
 		Type:         CommandType_Local,
-		CommandText:  "sudo",
-		CommandParms: []string{"mongod", "--config", "/data/mdb/3.0/service.conf", "--fork"},
+		CommandText:  "/usr/local/mongodb/3.0/bin/mongod",
+		CommandParms: []string{"--config", "/data/mdb/3.0/service.conf", "--fork"},
 	}
 
 	svc.KeepAlive()
