@@ -6,17 +6,25 @@ import (
 )
 
 type CommandTypeEnum int
+type ValidationTypeEnum int
 
 const (
 	CommandType_Local CommandTypeEnum = 1
 	CommandType_SSH   CommandTypeEnum = 2
 	CommandType_REST  CommandTypeEnum = 3
+
+	ValidationType_Contain ValidationTypeEnum = 1
+	ValidationType_Equal   ValidationTypeEnum = 2
+	ValidationType_Regex   ValidationTypeEnum = 10
 )
 
 type Command struct {
 	Type         CommandTypeEnum
 	CommandText  string
 	CommandParms []string
+
+	ValidationType  ValidationTypeEnum
+	ValidationValue string
 }
 
 func (c *Command) Exec() error {
@@ -31,6 +39,8 @@ func (c *Command) Exec() error {
 			ps = c.CommandParms
 		}
 		_, e = toolkit.RunCommand(c.CommandText, ps...)
+
+		//--- validation should be here
 	}
 	return e
 }

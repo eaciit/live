@@ -9,6 +9,7 @@ import (
 )
 
 type PingTypeEnum int
+type HttpBodyEnum int
 
 const (
 	PingType_Network PingTypeEnum = iota
@@ -16,11 +17,7 @@ const (
 	PingType_HttpBody
 	PingType_Command
 	PingType_Custom
-)
 
-type HttpBodyEnum int
-
-const (
 	HttpBody_Contains HttpBodyEnum = iota
 	HttpBody_Equals
 )
