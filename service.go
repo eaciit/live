@@ -3,7 +3,7 @@ package live
 import (
 	"fmt"
 	"github.com/eaciit/toolkit"
-	"strings"
+	//"strings"
 	"time"
 )
 
@@ -92,22 +92,6 @@ func (s *Service) KeepAlive() {
 func (s *Service) StopMonitor() {
 	s.MonitorStatus = "Stop"
 	s.addLog(fmt.Sprintf("Service %s live monitor has been stopped", s.Name), "INFO")
-}
-
-func (s *Service) receiveState() {
-	go func(s *Service) {
-		run := true
-		for run {
-			select {
-			case newState := <-s.cstate:
-				s.Status = newState
-				newState = strings.ToLower(newState)
-				if newState == "stop" {
-					run = false
-				}
-			}
-		}
-	}(s)
 }
 
 func (s *Service) bringItUp() error {
