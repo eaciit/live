@@ -6,11 +6,16 @@ import (
 )
 
 type CommandTypeEnum int
+type ValidationTypeEnum int
 
 const (
 	CommandType_Local CommandTypeEnum = 1
 	CommandType_SSH   CommandTypeEnum = 2
 	CommandType_REST  CommandTypeEnum = 3
+
+	ValidationType_Contain ValidationTypeEnum = 1
+	ValidationType_Equal   ValidationTypeEnum = 2
+	ValidationType_Regex   ValidationTypeEnum = 10
 )
 
 type Command struct {
@@ -20,7 +25,6 @@ type Command struct {
 	CommandText  string
 	CommandParms []string
 
-	//--- these attributes are used for rest command
 	RESTUrl      string
 	RESTMethod   string
 	RESTUser     string
@@ -28,11 +32,13 @@ type Command struct {
 	RESTAuthType string
 
 	//--- attributes used for SSH
-	SSHHost     string
-	SSHUser     string
-	SSHPassword string
-	SSHKeyFile  string
-	SSHAuthType string
+	SSHHost         string
+	SSHUser         string
+	SSHPassword     string
+	SSHKeyFile      string
+	SSHAuthType     string
+	ValidationType  ValidationTypeEnum
+	ValidationValue string
 }
 
 func (c *Command) Exec() error {
@@ -49,6 +55,7 @@ func (c *Command) Exec() error {
 		_, e = toolkit.RunCommand(c.CommandText, ps...)
 	} else if c.Type == CommandType_SSH {
 	} else if c.Type == CommandType_REST {
+		//--- validation should be here
 	}
 	return e
 }
