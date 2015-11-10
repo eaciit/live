@@ -2,6 +2,7 @@ package live
 
 import (
 	"fmt"
+	"github.com/eaciit/toolkit"
 	"strings"
 	"time"
 )
@@ -22,6 +23,8 @@ type Service struct {
 
 	cstate    chan string
 	lastCheck time.Time
+
+	logEngine *toolkit.LogEngine
 }
 
 func NewService() *Service {
@@ -31,6 +34,13 @@ func NewService() *Service {
 	s.CriticalInterval = 1 * time.Millisecond
 	s.RestartAfterNCritical = 3
 	return s
+}
+
+func (s *Service) AddLog(logtype, logtext string) {
+	if s.logEngine == nil {
+		s.logEngine = toolkit.NewLog(true, false, "", "", false)
+	}
+	s.logEngine.AddLog(logtext, logtype)
 }
 
 func (s *Service) KeepAlive() {
