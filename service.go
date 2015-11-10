@@ -92,15 +92,21 @@ func (s *Service) receiveState() {
 }
 
 func (s *Service) bringItUp() error {
-	var e error
+	var (
+		e error,
+//		res string,
+	)
 
 	if s.Status == "OK" {
 		if s.CommandStop != nil {
-			s.CommandStop.Exec()
+			_, e = s.CommandStop.Exec()
 		}
 	}
 
-	e = s.CommandStart.Exec()
+//	res, e = s.CommandStart.Exec()
+	_, e = s.CommandStart.Exec()
+
+
 	if e != nil {
 		return e
 	}
