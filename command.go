@@ -39,11 +39,7 @@ type Command struct {
 	RESTAuthType RESTAuthTypeEnum
 
 	//--- attributes used for SSH
-	SSHHost     string
-	SSHUser     string
-	SSHPassword string
-	SSHKeyFile  string
-	SSHAuthType string
+	SshClient *SshParm
 
 	ValidationType  ValidationTypeEnum
 	ValidationValue string
@@ -87,6 +83,10 @@ func (c *Command) Exec() (string, error) {
 		res, e = toolkit.RunCommand(c.CommandText, ps...)
 
 	} else if c.Type == CommandType_SSH {
+
+		ps := []string{c.CommandText}
+		res, e = c.SshClient.RunCommandSsh(ps...)
+
 	} else if c.Type == CommandType_REST {
 		if c.RESTAuthType == RESTAuthType_None {
 			httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, false, "", "")
