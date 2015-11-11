@@ -93,8 +93,8 @@ func (s *Service) receiveState() {
 
 func (s *Service) bringItUp() error {
 	var (
-		e error,
-//		res string,
+		e   error
+		res string
 	)
 
 	if s.Status == "OK" {
@@ -103,9 +103,15 @@ func (s *Service) bringItUp() error {
 		}
 	}
 
-//	res, e = s.CommandStart.Exec()
-	_, e = s.CommandStart.Exec()
+	res, e = s.CommandStart.Exec()
 
+	if e != nil {
+		return e
+	}
+
+	if s.CommandStart.ValidationValue != "" {
+		e = s.CommandStart.Validate(res)
+	}
 
 	if e != nil {
 		return e
