@@ -2,6 +2,7 @@ package live
 
 import (
 	"fmt"
+	"github.com/eaciit/toolkit"
 	"strings"
 	"time"
 )
@@ -22,6 +23,8 @@ type Service struct {
 
 	cstate    chan string
 	lastCheck time.Time
+
+	Log *toolkit.LogEngine
 }
 
 func NewService() *Service {
@@ -45,24 +48,23 @@ func (s *Service) KeepAlive() {
 					if e != nil {
 						s.Status = s.Ping.LastStatus
 						s.criticalFound++
-						fmt.Printf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error())
+						s.Log.AddLog(fmt.Sprintf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error()), "ERROR")
 						if s.criticalFound == s.RestartAfterNCritical {
 							e = s.bringItUp()
 							if e != nil {
-								fmt.Printf("[%v] Service %s restart fails - %d. Error: %s \n", time.Now(), s.Name, 1, e.Error())
+								s.Log.AddLog(fmt.Sprintf("[%v] Service %s restart fails - %d. Error: %s \n", time.Now(), s.Name, 1, e.Error()), "ERROR")
 							} else {
-								fmt.Printf("[%v] Service %s restarted successfully \n", time.Now(), s.Name)
+								s.Log.AddLog(fmt.Sprintf("[%v] Service %s restarted successfully \n", time.Now(), s.Name), "INFO")
 								s.criticalFound = 0
 								s.Status = "OK"
 							}
 						}
 					} else {
 						s.criticalFound = 0
+						s.Log.AddLog(fmt.Sprintf("[%v] Service %s ping successfully \n", time.Now(), s.Name), "INFO")
 					}
 				} else if s.criticalFound == s.RestartAfterNCritical {
-					fmt.Printf("[%v] Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
-						time.Now(),
-						s.RestartAfterNCritical)
+					s.Log.AddLog(fmt.Sprintf("[%v] Max critical event (%d) has been exceeded. Service monitor will be stopped\n", time.Now(), s.RestartAfterNCritical), "WARNING")
 					s.criticalFound++
 					s.StopMonitor()
 				}
