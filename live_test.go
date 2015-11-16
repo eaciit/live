@@ -21,6 +21,9 @@ import (
 	ValidationType_Contain ValidationTypeEnum = 1
 	ValidationType_Equal   ValidationTypeEnum = 2
 	ValidationType_Regex   ValidationTypeEnum = 10
+
+
+
 */
 
 func TestLocalCommandPingCommand(t *testing.T) {
@@ -29,7 +32,7 @@ func TestLocalCommandPingCommand(t *testing.T) {
 	//	fmt.Println("Test Check for MongoDb Service Local With Execution Command And Ping Command")
 	var (
 		err error
-		i   int = 25
+		i   int = 30
 	)
 
 	svc := NewService()
@@ -101,7 +104,7 @@ func TestLocalCommandPingHttpStatus(t *testing.T) {
 	//	fmt.Println("Test Check for MongoDb Service Local With Execution Command And Ping HttpStatus")
 	var (
 		err error
-		i   int = 25
+		i   int = 30
 	)
 
 	svc := NewService()
@@ -171,7 +174,7 @@ func TestLocalCommandPingHttpBody(t *testing.T) {
 	//	fmt.Println("Test Check for MongoDb Service Local With Execution Command And Ping HttpBody")
 	var (
 		err error
-		i   int = 25
+		i   int = 30
 	)
 
 	svc := NewService()
@@ -245,7 +248,7 @@ func TestSshExecPingHttpBody(t *testing.T) {
 	//	fmt.Println("Test Check for MySql Service Local With Execution Ssh And Ping HttpBody[REST]")
 	var (
 		err error
-		i   int = 25
+		i   int = 30
 	)
 
 	svc := NewService()
@@ -326,7 +329,7 @@ func TestRestExecPingHttpBody(t *testing.T) {
 	//	fmt.Println("Test Check for MySql Service With Execution Rest And Ping HttpBody[REST]")
 	var (
 		err error
-		i   int = 25
+		i   int = 30
 	)
 
 	svc := NewService()
@@ -352,7 +355,7 @@ func TestRestExecPingHttpBody(t *testing.T) {
 		ValidationValue: "SUCCESS",
 	}
 
-	svc.CommandStart = &Command{
+	svc.CommandStop = &Command{
 		Type:            CommandType_REST,
 		RESTUrl:         "http://192.168.56.101:8080/stop",
 		RESTMethod:      "GET", //POST,GET
@@ -393,6 +396,24 @@ func TestRestExecPingHttpBody(t *testing.T) {
 		}
 	}
 	fmt.Println("[END] \n\n")
+}
+
+func TestSsh(t *testing.T) {
+	var SshClient SshParm
+
+	SshClient.SSHAuthType = SSHAuthType_Certificate
+	SshClient.SSHHost = "192.168.56.101:22"
+	SshClient.SSHUser = "alip"
+	SshClient.SSHKeyLocation = "C:\\Users\\User\\.ssh\\id_rsa"
+
+	ps := []string{"sudo service mysql status"}
+	res, e := SshClient.RunCommandSsh(ps...)
+
+	if e != nil {
+		t.Errorf("Error, %s \n", e)
+	} else {
+		t.Logf("RUN, %s \n", res)
+	}
 }
 
 // func TestLocalAll(t *testing.T) {
