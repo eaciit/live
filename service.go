@@ -71,7 +71,7 @@ func (s *Service) KeepAlive() {
 						s.Log.AddLog(fmt.Sprintf("[Service %s ping successfully]", s.Name), "INFO")
 					}
 				} else if s.criticalFound == s.RestartAfterNCritical {
-					s.Log.AddLog(fmt.Sprintf("Max critical event (%d) has been exceeded. Service monitor will be stopped", s.RestartAfterNCritical), "WARNING")
+					s.Log.AddLog(fmt.Sprintf("[Max critical event (%d) has been exceeded. Service monitor will be stopped]", s.RestartAfterNCritical), "WARNING")
 					s.criticalFound++
 					s.StopMonitor()
 				}
