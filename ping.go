@@ -5,6 +5,8 @@ import (
 	"github.com/eaciit/toolkit"
 	//"io/ioutil"
 	//"net/http"
+	"net"
+	"regexp"
 	"strings"
 )
 
@@ -25,13 +27,26 @@ const (
 	HttpBody_Equals
 )
 
+type ResponseEnum int
+
+const (
+	Response_Contains ResponseEnum = iota
+	Response_Equals
+	Response_RegEx
+)
+
 type Ping struct {
 	Type       PingTypeEnum
 	User       string
 	Password   string
 	Host       string
-	Command    string
 	LastStatus string
+
+	//--- these attributes are used for command check
+	Command       string
+	CommandParms  []string
+	ResponseType  ResponseEnum
+	ResponseValue string
 
 	HttpBodyType   HttpBodyEnum
 	HttpBodySearch string
@@ -47,7 +62,7 @@ func (p *Ping) Check() error {
 	} else if pingType == PingType_HttpStatus {
 		e = p.checkHttpStatus()
 	} else if pingType == PingType_HttpBody {
-		e = p.checkHttpStatus()
+		e = p.checkHttpBody()
 	} else if pingType == PingType_Command {
 		e = p.checkCommand()
 	} else if pingType == PingType_Custom {
@@ -57,6 +72,11 @@ func (p *Ping) Check() error {
 }
 
 func (p *Ping) checkNetwork() error {
+	_, e := net.Dial("tcp", p.Host)
+	if e != nil {
+		return fmt.Errorf("Unable to access %s, %s", p.Host, e.Error())
+	}
+
 	return nil
 }
 
@@ -92,6 +112,32 @@ func (p *Ping) checkHttpBody() error {
 }
 
 func (p *Ping) checkCommand() error {
+
+	ps := []string{}
+
+	if p.CommandParms != nil {
+		ps = p.CommandParms
+	}
+	res, e := toolkit.RunCommand(p.Command, ps...)
+
+	if e != nil {
+		return e
+	}
+
+	if p.ResponseType == Response_Equals {
+		if res != p.ResponseValue {
+			return fmt.Errorf("Response is not valid. Expecting for %s", p.ResponseValue)
+		}
+	} else if p.ResponseType == Response_Contains {
+		if !strings.Contains(res, p.ResponseValue) {
+			return fmt.Errorf("Phrase %s could not be found on response", p.ResponseValue)
+		}
+	} else if p.ResponseType == Response_RegEx {
+		match, _ := regexp.MatchString(p.ResponseValue, res)
+		if !match {
+			return fmt.Errorf("Response is not valid. Not match with pattern %s", p.ResponseValue)
+		}
+	}
 	return nil
 }
 
