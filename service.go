@@ -36,11 +36,11 @@ func NewService() *Service {
 	return s
 }
 
-func (s *Service) AddLog(logtype, logtext string) {
-	if s.logEngine == nil {
-		s.logEngine = toolkit.NewLog(true, false, "", "", false)
+func (s *Service) AddLog(logtext, logtype string) {
+	if s.Log == nil {
+		s.Log, _ = toolkit.NewLog(true, false, "", "", "")
 	}
-	s.logEngine.AddLog(logtext, logtype)
+	s.Log.AddLog(logtext, logtype)
 }
 
 func (s *Service) KeepAlive() {
@@ -55,23 +55,23 @@ func (s *Service) KeepAlive() {
 					if e != nil {
 						s.Status = s.Ping.LastStatus
 						s.criticalFound++
-						s.Log.AddLog(fmt.Sprintf("[Service %s check fails - %d. Error: %s]", s.Name, s.criticalFound, e.Error()), "ERROR")
+						s.AddLog(fmt.Sprintf("[Service %s check fails - %d. Error: %s]", s.Name, s.criticalFound, e.Error()), "ERROR")
 						if s.criticalFound == s.RestartAfterNCritical {
 							e = s.bringItUp()
 							if e != nil {
-								s.Log.AddLog(fmt.Sprintf("[Service %s restart fails - %d. Error: %s]", s.Name, 1, e.Error()), "ERROR")
+								s.AddLog(fmt.Sprintf("[Service %s restart fails - %d. Error: %s]", s.Name, 1, e.Error()), "ERROR")
 							} else {
-								s.Log.AddLog(fmt.Sprintf("[Service %s restarted successfully]", s.Name), "INFO")
+								s.AddLog(fmt.Sprintf("[Service %s restarted successfully]", s.Name), "INFO")
 								s.criticalFound = 0
 								s.Status = "OK"
 							}
 						}
 					} else {
 						s.criticalFound = 0
-						s.Log.AddLog(fmt.Sprintf("[Service %s ping successfully]", s.Name), "INFO")
+						s.AddLog(fmt.Sprintf("[Service %s ping successfully]", s.Name), "INFO")
 					}
 				} else if s.criticalFound == s.RestartAfterNCritical {
-					s.Log.AddLog(fmt.Sprintf("[Max critical event (%d) has been exceeded. Service monitor will be stopped]", s.RestartAfterNCritical), "WARNING")
+					s.AddLog(fmt.Sprintf("[Max critical event (%d) has been exceeded. Service monitor will be stopped]", s.RestartAfterNCritical), "WARNING")
 					s.criticalFound++
 					s.StopMonitor()
 				}
