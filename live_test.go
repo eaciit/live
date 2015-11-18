@@ -342,6 +342,7 @@ func TestRestExecPingHttpBody(t *testing.T) {
 		return p
 	}()
 
+	svc.Name = "MongoDb 3.0 WT Port 27123"
 	svc.RestartAfterNCritical = 3
 	svc.Interval = 1 * time.Second
 	svc.CommandStart = &Command{

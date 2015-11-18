@@ -36,6 +36,13 @@ func NewService() *Service {
 	return s
 }
 
+func (s *Service) AddLog(logtype, logtext string) {
+	if s.logEngine == nil {
+		s.logEngine = toolkit.NewLog(true, false, "", "", false)
+	}
+	s.logEngine.AddLog(logtext, logtype)
+}
+
 func (s *Service) KeepAlive() {
 	s.MonitorStatus = "Running"
 	s.Status = "OK"
