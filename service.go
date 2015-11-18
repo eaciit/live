@@ -24,7 +24,7 @@ type Service struct {
 	cstate    chan string
 	lastCheck time.Time
 
-	logEngine *toolkit.LogEngine
+	Log *toolkit.LogEngine
 }
 
 func NewService() *Service {
@@ -55,24 +55,23 @@ func (s *Service) KeepAlive() {
 					if e != nil {
 						s.Status = s.Ping.LastStatus
 						s.criticalFound++
-						fmt.Printf("[%v] Service %s check fails - %d. Error: %s \n", time.Now(), s.Name, s.criticalFound, e.Error())
+						s.Log.AddLog(fmt.Sprintf("[Service %s check fails - %d. Error: %s]", s.Name, s.criticalFound, e.Error()), "ERROR")
 						if s.criticalFound == s.RestartAfterNCritical {
 							e = s.bringItUp()
 							if e != nil {
-								fmt.Printf("[%v] Service %s restart fails - %d. Error: %s \n", time.Now(), s.Name, 1, e.Error())
+								s.Log.AddLog(fmt.Sprintf("[Service %s restart fails - %d. Error: %s]", s.Name, 1, e.Error()), "ERROR")
 							} else {
-								fmt.Printf("[%v] Service %s restarted successfully \n", time.Now(), s.Name)
+								s.Log.AddLog(fmt.Sprintf("[Service %s restarted successfully]", s.Name), "INFO")
 								s.criticalFound = 0
 								s.Status = "OK"
 							}
 						}
 					} else {
 						s.criticalFound = 0
+						s.Log.AddLog(fmt.Sprintf("[Service %s ping successfully]", s.Name), "INFO")
 					}
 				} else if s.criticalFound == s.RestartAfterNCritical {
-					fmt.Printf("[%v] Max critical event (%d) has been exceeded. Service monitor will be stopped\n",
-						time.Now(),
-						s.RestartAfterNCritical)
+					s.Log.AddLog(fmt.Sprintf("Max critical event (%d) has been exceeded. Service monitor will be stopped", s.RestartAfterNCritical), "WARNING")
 					s.criticalFound++
 					s.StopMonitor()
 				}
@@ -102,15 +101,27 @@ func (s *Service) receiveState() {
 }
 
 func (s *Service) bringItUp() error {
-	var e error
+	var (
+		e   error
+		res string
+	)
 
 	if s.Status == "OK" {
 		if s.CommandStop != nil {
-			s.CommandStop.Exec()
+			_, e = s.CommandStop.Exec()
 		}
 	}
 
-	e = s.CommandStart.Exec()
+	res, e = s.CommandStart.Exec()
+
+	if e != nil {
+		return e
+	}
+
+	if s.CommandStart.ValidationValue != "" {
+		e = s.CommandStart.Validate(res)
+	}
+
 	if e != nil {
 		return e
 	}
