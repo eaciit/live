@@ -1104,3 +1104,10 @@ input.form-input {
     border-bottom: 1px solid rgb(221, 221, 221);
     text-align: right;
   }
+.item-headerright{
+    padding-right: 0px;
+}
+.item-headerleft{
+    padding-left: 0px;
+    text-align: left;
+}

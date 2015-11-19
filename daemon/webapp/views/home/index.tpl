@@ -84,6 +84,8 @@
     HttpBodyType: ko.observableArray(['HttpBody_Contains','HttpBody_Equals']),
     RESTAuthType : ko.observableArray(['RESTAuthType_None','RESTAuthType_Basic']),
     DateFilter: ko.observable(''),
+    DateStatus: ko.observable(),
+    DateStatusString: ko.observable(),
 	}
 
   Home.gridColumns = ko.observableArray([
@@ -104,23 +106,46 @@
     },
   ]);
 
+  function diffDateTime(earlierdate){
+    // var difference = laterdate.getTime() - earlierdate.getTime();
+    var datenow = new Date(), dateval = new Date(earlierdate),difference = datenow.getTime() - dateval.getTime();
+ 
+    var daysDifference = Math.floor(difference/1000/60/60/24);
+    difference -= daysDifference*1000*60*60*24;
+ 
+    var hoursDifference = Math.floor(difference/1000/60/60);
+    difference -= hoursDifference*1000*60*60;
+ 
+    var minutesDifference = Math.floor(difference/1000/60);
+    difference -= minutesDifference*1000*60;
+ 
+    var secondsDifference = Math.floor(difference/1000);
+
+    return daysDifference + 'd ' + hoursDifference + 'h ' + minutesDifference + 'm ' + secondsDifference + 's '
+  }
+
 </script>
 
 <script id="gridService" type="text/html">
     <div class="grid__item" href="#" data-bind="attr:{indexGrid:$index}">
       <div class="content-itemgrid">
-        <div class="item-removegrid">
-          <span class="glyphicon glyphicon-pencil btneditgrid" data-bind="click:function(){Home.EditService(Service.ID,'Grid')}"></span>
-          <span class="glyphicon glyphicon-remove" data-bind="click:function(){Home.RemoveService(Service.ID)}"></span>
+        <div class="col-md-6 item-removegrid item-headerleft" style="text-align:left;">
+          <span class="glyphicon glyphicon-play btneditgrid" data-bind="click:function(){Home.ServiceStart(Service.ID())}"></span>
+          <span class="glyphicon glyphicon-stop btneditgrid" data-bind="click:function(){Home.ServiceStop(Service.ID())}"></span>
+          <span class="glyphicon glyphicon-list-alt" data-bind="click:function(){Home.DetailService(Service.ID(),'Log')}"></span>
         </div>
-        <div class="item-bodygrid" data-bind="click:function(){Home.DetailService(Service.ID, $index)}">
+        <div class="col-md-6 item-removegrid item-headerright">
+          <span class="glyphicon glyphicon-pencil btneditgrid" data-bind="click:function(){Home.DetailService(Service.ID(),'Grid')}"></span>
+          <span class="glyphicon glyphicon-remove" data-bind="click:function(){Home.RemoveService(Service.ID())}"></span>
+        </div>
+        <div class="item-bodygrid" data-bind="click:function(){Home.DetailService(Service.ID(), $index)}">
           <h2 class="title title--preview" data-bind="text:Service.Title"></h2>
           <div class="loader"></div>
           <span class="category" data-bind="text:Ping.Host() + ' : ' + Ping.Port()"></span>
           <div class="meta meta--preview">
             <img class="meta__avatar" src="/static/img/symbol_check.png" data-bind="attr:{src:Service.StatusService() == 'Start' ? '/static/img/symbol_check.png' : '/static/img/stop1normalred.png'}" alt="author01" width="50" height="50" />
-            <span class="meta__date"><i class="fa fa-calendar-o"></i> 9 Apr</span>
-            <span class="meta__reading-time"><i class="fa fa-clock-o"></i> 3d 6h 5m 25s </span>
+            <span class="meta__date"><i class="fa fa-calendar-o"></i> <span data-bind="text:moment(Service.DateStatus()).format('DD MMM YYYY')">9 Apr</span></span>
+            <span class="meta__reading-time"><i class="fa fa-clock-o"></i> <span data-bind="text:diffDateTime(Service.DateStatus())"> </span></span>
           </div>
         </div>
       </div>
@@ -177,7 +202,7 @@
           <img class="meta__avatar" src="/static/img/symbol_check.png" data-bind="attr:{src:Service.StatusService() == 'Start' ? '/static/img/symbol_check.png' : '/static/img/stop1normalred.png'}" alt="author01" width="60" height="60" />
         </span>
         <span class="col-md-12">Live</span>
-        <span class="col-md-12">6d 7h 4m 2s</span>
+        <span class="col-md-12" data-bind="text:Home.DateStatus"></span>
       </div>
       <div class="col-md-9" id="gridlog" data-bind="kendoGrid:{data:[], filterable:true,pageable: true, groupable:false, columns:Home.gridColumns}"></div>
     </div>
@@ -370,6 +395,13 @@
           </div>
 
           <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
+            <label class="col-md-3 filter-label">Auth Type</label>
+            <div class="col-md-8 dd-ping">
+              <input name="ddrestaunthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.RESTAuthType, value: ExedCommand.RestAuthType}"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST' && ExedCommand.RestAuthType() == 'RESTAuthType_Basic'">
             <label class="col-md-3 filter-label">Rest User</label>
             <div class="col-md-3">
                 <input name="txtrestuser" class="form-input form-control" type="text" data-bind="value:ExedCommand.RestUser" />
@@ -377,14 +409,6 @@
             <label class="col-md-2 filter-label">Rest Pass</label>
             <div class="col-md-3">
                 <input name="txtrestpass" class="form-input form-control" type="password" data-bind="value:ExedCommand.RestPassword" />
-            </div>
-          </div>
-
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
-            <label class="col-md-3 filter-label">Auth Type</label>
-            <div class="col-md-8">
-              <!-- <input name="txtrestauthtype" class="form-input form-control" data-bind="value:ExedCommand.RestAuthType"/> -->
-              <input name="ddrestaunthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.RestAuthType, value: ExedCommand.RestAuthType}"/>
             </div>
           </div>
 
@@ -476,7 +500,7 @@
             <button class="btn btn-sm btn-success space-right" data-bind="click:function(){Home.ServiceStart(Service.ID())}"><span class="glyphicon glyphicon-play"></span> Start</button>
             <button class="btn btn-sm btn-danger space-right" data-bind="click:function(){Home.ServiceStop(Service.ID())}"><span class="glyphicon glyphicon-stop"></span> Stop</button>
             <button class="btn btn-sm btn-warning space-right" data-bind="click:Home.Log"><span class="glyphicon glyphicon-list-alt"></span> Log</button>
-            <button class="btn btn-sm btn-info space-right" data-bind="click:function(){Home.EditService(Service.ID(),'Detail')}"><span class="glyphicon glyphicon-pencil"></span> Update</button>
+            <button class="btn btn-sm btn-info space-right" data-bind="click:function(){Home.EditService('Detail')}"><span class="glyphicon glyphicon-pencil"></span> Update</button>
             <button class="btn btn-sm btn-danger space-right" data-bind="click:function(){Home.RemoveService(Service.ID())}"><span class="glyphicon glyphicon-trash"></span> Remove</button>
           </div>
           <div class="col-md-12">
@@ -488,7 +512,7 @@
             </div>
             <div class="col-md-12 subCenter">
               <label data-bind="text:Service.Description() + ' ' + Ping.Host() + ' : ' + Ping.Port()"></label><br/>
-              <label>6D 12H 4M 12S</label>
+              <label data-bind="text:Home.DateStatus"></label>
             </div>
           </div>
         </div>
@@ -595,9 +619,9 @@
         });
     }
   }
-  Home.DetailService = function(idService, indexService){
+  Home.DetailService = function(idService, valview){
     // console.log(idService);
-    Home.IndexService(indexService);
+    // Home.IndexService(indexService);
     var url = "/home/getdetailservice";
     $.ajax({
       url: url,
@@ -606,8 +630,16 @@
       data : {ID: idService},
       success : function(res) {
         if(res.success){
-          $('#modalDetailService').modal('show');
           ko.mapping.fromJS(res.data, Home.RecordServiceNew);
+          Home.DateStatus(diffDateTime(res.data.Service.DateStatus));
+          Home.DateStatusString(res.data.Service.DateStatus);
+          if(valview == 'Grid'){
+            Home.EditService(valview);
+          } else if(valview == 'Log'){
+            Home.Log();
+          }else {
+            $('#modalDetailService').modal('show');
+          }
         }else{
           alert(res.message);
         }
@@ -619,6 +651,7 @@
     Home.Mode(false);
     Home.DateFilter(moment().format('DD MMM YYYY'));
     Home.GetLogService(Home.RecordServiceNew.Service.ID());
+    Home.DateStatus(diffDateTime(Home.DateStatusString()));
   }
   Home.BackGrid = function(){
     Home.Mode(true);
@@ -660,30 +693,30 @@
       },
     });
   }
-  Home.EditService = function(idService, valview){
+  Home.EditService = function(valview){
     Home.ModeSave('Update');
-    if(valview === 'Detail')
-      $('#modalDetailService').modal('hide');
-
     $("#txtcommandparmping").tokenInput('clear');
     $("#txtcommandparmexedstart").tokenInput('clear');
     $("#txtcommandparmexedstop").tokenInput('clear');
 
-    var searchElem = ko.utils.arrayFilter(Home.RecordServices(),function (item) {
-      return item.Service.ID === idService;
-    });
-    if (searchElem.length > 0){
-      ko.mapping.fromJS(searchElem[0], Home.RecordServiceNew);
-      for (var key in Home.RecordServiceNew.Ping.CommandParm()){
-        $("#txtcommandparmping").tokenInput("add", {id: Home.RecordServiceNew.Ping.CommandParm()[key], name: Home.RecordServiceNew.Ping.CommandParm()[key]});
-      }
-      for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStart()){
-        $("#txtcommandparmexedstart").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key]});
-      }
-      for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStop()){
-        $("#txtcommandparmexedstop").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key]});
-      }
+    // var searchElem = ko.utils.arrayFilter(Home.RecordServices(),function (item) {
+    //   return item.Service.ID() === idService;
+    // });
+    if(valview === 'Detail')
+      $('#modalDetailService').modal('hide');
+
+    // if (searchElem.length > 0){
+      // ko.mapping.fromJS(searchElem[0], Home.RecordServiceNew);
+    for (var key in Home.RecordServiceNew.Ping.CommandParm()){
+      $("#txtcommandparmping").tokenInput("add", {id: Home.RecordServiceNew.Ping.CommandParm()[key], name: Home.RecordServiceNew.Ping.CommandParm()[key]});
     }
+    for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStart()){
+      $("#txtcommandparmexedstart").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key]});
+    }
+    for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStop()){
+      $("#txtcommandparmexedstop").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key]});
+    }
+    // }
     Home.ModeAdd('Service');
     $('#modalAddService').modal('show');
   }
