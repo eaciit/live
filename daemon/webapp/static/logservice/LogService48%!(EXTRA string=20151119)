@@ -1,0 +1,5 @@
+ERROR 2015/11/19 11:17:19 [Service  check fails - 1. Error: Unable to access http://:, dial tcp: too many colons in address http://:]
+ERROR 2015/11/19 11:17:19 [Service  check fails - 2. Error: Unable to access http://:, dial tcp: too many colons in address http://:]
+WARNING 2015/11/19 11:17:20 [Max critical event (3) has been exceeded. Service monitor will be stopped]
+ERROR 2015/11/19 11:17:20 [Service  check fails - 3. Error: Unable to access http://:, dial tcp: too many colons in address http://:]
+ERROR 2015/11/19 11:17:20 [Service  restart fails - 1. Error: fork/exec : no such file or directory]
