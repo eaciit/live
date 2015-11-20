@@ -21,7 +21,9 @@
       PathLog: "",
       TypeLog: "Daily",
       StatusService: "",
-      // LastUpdate: "",
+      EmailWarning: [],
+      EmailError: [],
+      LogStatus: "Success",
     },
     Ping : {
       Type : "PingType_Network",
@@ -31,23 +33,18 @@
       Port : "",
       LastStatus : "",
       Command : "",
-      // CommandParmString : "",
       CommandParm : [],
       ResponseType : "Response_Contains",
       ResponseValue : "",
       HttpBodyType : "HttpBody_Contains",
       HttpBodySearch : ""
     },
-    ExedCommand : {
+    ExedCommandStart : {
       Type : "CommandType_Local",
       CommandText : "",
-      CommandTextStart: "",
-      CommandTextStop : "",
-      CommandParmStart : [],
-      CommandParmStop : [],
-      // CommandParmString: "",
+      CommandTextSsh: "",
+      CommandParm : [],
       RestUrl : "",
-      RestUrlStop : "",
       RestMenthod : "",
       RestUser : "",
       RestPassword : "",
@@ -58,10 +55,27 @@
       SshPassword : "",
       SshKeyLocation : "",
       SshAuthType : "SSHAuthType_Password",
-      ValidationTypeStart: "ValidationType_Contain",
-      ValidationValueStart: "",
-      ValidationTypeStop: "ValidationType_Contain",
-      ValidationValueStop: "",
+      ValidationType: "ValidationType_Contain",
+      ValidationValue: "",
+    },
+    ExedCommandStop : {
+      Type : "CommandType_Local",
+      CommandText : "",
+      CommandTextSsh: "",
+      CommandParm : [],
+      RestUrl : "",
+      RestMenthod : "",
+      RestUser : "",
+      RestPassword : "",
+      RestAuthType : "RESTAuthType_None",
+      SshHost : "",
+      SshPort : "",
+      SshUser : "",
+      SshPassword : "",
+      SshKeyLocation : "",
+      SshAuthType : "SSHAuthType_Password",
+      ValidationType: "ValidationType_Contain",
+      ValidationValue: "",
     }
   }
 
@@ -130,20 +144,21 @@
     <div class="grid__item" href="#" data-bind="attr:{indexGrid:$index}">
       <div class="content-itemgrid">
         <div class="col-md-6 item-removegrid item-headerleft" style="text-align:left;">
-          <span class="glyphicon glyphicon-play btneditgrid" data-bind="click:function(){Home.ServiceStart(Service.ID())}"></span>
+          <span class="glyphicon glyphicon-play btneditgrid" data-bind="click:function(){Home.DetailService(Service.ID(),'Start', $index())}"></span>
           <span class="glyphicon glyphicon-stop btneditgrid" data-bind="click:function(){Home.ServiceStop(Service.ID())}"></span>
-          <span class="glyphicon glyphicon-list-alt" data-bind="click:function(){Home.DetailService(Service.ID(),'Log')}"></span>
+          <span class="glyphicon glyphicon-list-alt" data-bind="click:function(){Home.DetailService(Service.ID(),'Log', $index())}"></span>
         </div>
         <div class="col-md-6 item-removegrid item-headerright">
-          <span class="glyphicon glyphicon-pencil btneditgrid" data-bind="click:function(){Home.DetailService(Service.ID(),'Grid')}"></span>
+          <span class="glyphicon glyphicon-pencil btneditgrid" data-bind="click:function(){Home.DetailService(Service.ID(),'Grid', $index())}"></span>
           <span class="glyphicon glyphicon-remove" data-bind="click:function(){Home.RemoveService(Service.ID())}"></span>
         </div>
-        <div class="item-bodygrid" data-bind="click:function(){Home.DetailService(Service.ID(), $index)}">
+        <div class="item-bodygrid" data-bind="click:function(){Home.DetailService(Service.ID(), 'Detail', $index())}">
           <h2 class="title title--preview" data-bind="text:Service.Title"></h2>
           <div class="loader"></div>
           <span class="category" data-bind="text:Ping.Host() + ' : ' + Ping.Port()"></span>
           <div class="meta meta--preview">
             <img class="meta__avatar" src="/static/img/symbol_check.png" data-bind="attr:{src:Service.StatusService() == 'Start' ? '/static/img/symbol_check.png' : '/static/img/stop1normalred.png'}" alt="author01" width="50" height="50" />
+            <span class="meta__avatar glyphicon glyphicon-info-sign" style="border-radius: 20px; width:20px; height:20px; font-size:20px; margin:1em auto;" data-bind="visible:Service.LogStatus() == 'Fail' || Service.LogStatus() == 'Preparing', style : {color: Service.LogStatus() == 'Fail' ? '#F73434':'#F0ED46'}"></span>
             <span class="meta__date"><i class="fa fa-calendar-o"></i> <span data-bind="text:moment(Service.DateStatus()).format('DD MMM YYYY')">9 Apr</span></span>
             <span class="meta__reading-time"><i class="fa fa-clock-o"></i> <span data-bind="text:diffDateTime(Service.DateStatus())"> </span></span>
           </div>
@@ -151,6 +166,7 @@
       </div>
     </div>
 </script>
+<!-- F73434 && F0ED46 -->
 
 <div class="panel panel-warning" data-bind="with:Home">
 	<div class="panel-body">
@@ -223,38 +239,45 @@
         </div>
         <div class="col-md-12" data-bind="visible:Home.ModeAdd() == 'Service'">
           <div class="row">
-            <label class="col-md-2 filter-label">Title</label>
-            <div class="col-md-9">
+            <label class="col-md-3 filter-label">Title</label>
+            <div class="col-md-8">
                 <input name="txtTitle" class="form-input form-control" type="text" data-bind="value:Service.Title" />
             </div>
           </div>
           <div class="row">
-            <label class="col-md-2 filter-label">Description</label>
-            <div class="col-md-9">
+            <label class="col-md-3 filter-label">Description</label>
+            <div class="col-md-8">
                 <input name="txtDescription" class="form-input form-control" type="text" data-bind="value:Service.Description" />
             </div>
           </div>
 
           <div class="row">
-            <label class="col-md-2 filter-label">Restart</label>
-            <div class="col-md-9">
+            <label class="col-md-3 filter-label">Restart</label>
+            <div class="col-md-8">
                 <input name="txtRestart" class="form-input form-control" type="text" data-bind="value:Service.RestartAfterNCritical" />
             </div>
           </div>
 
           <div class="row">
-            <label class="col-md-2 filter-label">Interval</label>
-            <div class="col-md-9">
+            <label class="col-md-3 filter-label">Interval</label>
+            <div class="col-md-8 dd-ping">
                 <input name="txtInterval" class="form-input form-control" type="text" data-bind="value:Service.Interval" />
             </div>
           </div>
 
-          <!-- <div class="row">
-            <label class="col-md-2 filter-label">Type</label>
-            <div class="col-md-9 dd-ping">
-              <input name="ddtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.TypeServiceLog, value:Service.TypeLog}"/>
+          <div class="row">
+            <label class="col-md-3 filter-label">Email Warning</label>
+            <div class="col-md-8 dd-ping">
+              <input name="txtemailwarning" id="txtemailwarning" class="form-input form-control"/>
             </div>
-          </div> -->
+          </div>
+
+          <div class="row">
+            <label class="col-md-3 filter-label">Email Error</label>
+            <div class="col-md-8">
+              <input name="txtemailerror" id="txtemailerror" class="form-input form-control"/>
+            </div>
+          </div>
         </div>
         <div class="col-md-12" data-bind="visible:Home.ModeAdd() == 'Ping'">
           <div class="row">
@@ -263,17 +286,6 @@
               <input name="ddtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.PingType, value:Ping.Type}"/>
             </div>
           </div>
-
-          <!-- <div class="row">
-            <label class="col-md-2 filter-label">Username</label>
-            <div class="col-md-4">
-                <input name="txtUsername" class="form-input form-control" type="text" data-bind="value:Ping.User" />
-            </div>
-            <label class="col-md-2 filter-label">Password</label>
-            <div class="col-md-3">
-                <input name="txtPassword" class="form-input form-control" type="password" data-bind="value:Ping.Password" />
-            </div>
-          </div> -->
 
           <div class="row" data-bind="visible:Ping.Type() == 'PingType_Network' || Ping.Type() == 'PingType_HttpStatus' || Ping.Type() == 'PingType_HttpBody'">
             <label class="col-md-2 filter-label">Host</label>
@@ -330,146 +342,222 @@
 
         </div>
 
-        <div class="col-md-12" data-bind="visible:Home.ModeAdd() != 'Ping' && Home.ModeAdd() != 'Service'">
+        <!-- Exec Start -->
+        <div class="col-md-12" data-bind="visible:Home.ModeAdd() == 'EXEC COMMAND START'">
           <div class="row">
             <label class="col-md-3 filter-label">Type</label>
             <div class="col-md-8 dd-ping">
-              <input name="ddexedtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ExedCommandType, value: ExedCommand.Type}"/>
+              <input name="ddexedtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ExedCommandType, value: ExedCommandStart.Type}"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_Local'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_Local'">
             <label class="col-md-3 filter-label">Command Text</label>
             <div class="col-md-8">
-              <input name="txtcommand" class="form-input form-control" data-bind="value:ExedCommand.CommandText"/>
+              <input name="txtcommand" class="form-input form-control" data-bind="value:ExedCommandStart.CommandText"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_SSH'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_SSH'">
             <label class="col-md-3 filter-label">Command Start</label>
             <div class="col-md-8">
-              <input name="txtcommandstart" class="form-input form-control" data-bind="value:ExedCommand.CommandTextStart"/>
+              <input name="txtcommandstart" class="form-input form-control" data-bind="value:ExedCommandStart.CommandText"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_SSH'">
-            <label class="col-md-3 filter-label">Command Stop</label>
-            <div class="col-md-8">
-              <input name="txtcommandstop" class="form-input form-control" data-bind="value:ExedCommand.CommandTextStop"/>
-            </div>
-          </div>
-
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_Local'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_Local'">
             <label class="col-md-3 filter-label">Command Start</label>
             <div class="col-md-8">
               <input name="txtcommandparm" id="txtcommandparmexedstart" class="form-input form-control"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_Local'">
-            <label class="col-md-3 filter-label">Command Stop</label>
-            <div class="col-md-8">
-              <input name="txtcommandparm" id="txtcommandparmexedstop" class="form-input form-control"/>
-            </div>
-          </div>
-
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_REST'">
             <label class="col-md-3 filter-label">Url Start</label>
             <div class="col-md-8">
-              <input name="txtresturl" class="form-input form-control" data-bind="value:ExedCommand.RestUrl"/>
+              <input name="txtresturl" class="form-input form-control" data-bind="value:ExedCommandStart.RestUrl"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
-            <label class="col-md-3 filter-label">Url Stop</label>
-            <div class="col-md-8">
-              <input name="txtresturlstop" class="form-input form-control" data-bind="value:ExedCommand.RestUrlStop"/>
-            </div>
-          </div>
-
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_REST'">
             <label class="col-md-3 filter-label">Rest Method</label>
             <div class="col-md-8">
-              <input name="txtrestmethod" class="form-input form-control" data-bind="value:ExedCommand.RestMenthod"/>
+              <input name="txtrestmethod" class="form-input form-control" data-bind="value:ExedCommandStart.RestMenthod"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_REST'">
             <label class="col-md-3 filter-label">Auth Type</label>
             <div class="col-md-8 dd-ping">
-              <input name="ddrestaunthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.RESTAuthType, value: ExedCommand.RestAuthType}"/>
+              <input name="ddrestaunthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.RESTAuthType, value: ExedCommandStart.RestAuthType}"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_REST' && ExedCommand.RestAuthType() == 'RESTAuthType_Basic'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_REST' && ExedCommandStart.RestAuthType() == 'RESTAuthType_Basic'">
             <label class="col-md-3 filter-label">Rest User</label>
             <div class="col-md-3">
-                <input name="txtrestuser" class="form-input form-control" type="text" data-bind="value:ExedCommand.RestUser" />
+                <input name="txtrestuser" class="form-input form-control" type="text" data-bind="value:ExedCommandStart.RestUser" />
             </div>
             <label class="col-md-2 filter-label">Rest Pass</label>
             <div class="col-md-3">
-                <input name="txtrestpass" class="form-input form-control" type="password" data-bind="value:ExedCommand.RestPassword" />
+                <input name="txtrestpass" class="form-input form-control" type="password" data-bind="value:ExedCommandStart.RestPassword" />
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_SSH'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_SSH'">
             <label class="col-md-3 filter-label">SSH Host</label>
             <div class="col-md-3">
-                <input name="txtSshHost" class="form-input form-control" type="text" data-bind="value:ExedCommand.SshHost" />
+                <input name="txtSshHost" class="form-input form-control" type="text" data-bind="value:ExedCommandStart.SshHost" />
             </div>
             <label class="col-md-2 filter-label">SSH Port</label>
             <div class="col-md-3">
-                <input name="txtSshPort" class="form-input form-control" type="text" data-bind="value:ExedCommand.SshPort" />
+                <input name="txtSshPort" class="form-input form-control" type="text" data-bind="value:ExedCommandStart.SshPort" />
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_SSH'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_SSH'">
             <label class="col-md-3 filter-label">Auth Type</label>
             <div class="col-md-8 dd-ping">
-              <input name="ddsshauthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.SshAuthType, value: ExedCommand.SshAuthType}"/>
+              <input name="ddsshauthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.SshAuthType, value: ExedCommandStart.SshAuthType}"/>
             </div>
           </div>
 
-          <div class="row" data-bind="visible:ExedCommand.Type() == 'CommandType_SSH'">
+          <div class="row" data-bind="visible:ExedCommandStart.Type() == 'CommandType_SSH'">
             <label class="col-md-3 filter-label">SSH User</label>
             <div class="col-md-3">
-                <input name="txtsshuser" class="form-input form-control" type="text" data-bind="value:ExedCommand.SshUser" />
+                <input name="txtsshuser" class="form-input form-control" type="text" data-bind="value:ExedCommandStart.SshUser" />
             </div>
-            <label class="col-md-2 filter-label" data-bind="visible:ExedCommand.SshAuthType() == 'SSHAuthType_Password'">SSH Pass</label>
-            <div class="col-md-3" data-bind="visible:ExedCommand.SshAuthType() == 'SSHAuthType_Password'">
-                <input name="txtsshpassword" class="form-input form-control" type="password" data-bind="value:ExedCommand.SshPassword" />
+            <label class="col-md-2 filter-label" data-bind="visible:ExedCommandStart.SshAuthType() == 'SSHAuthType_Password'">SSH Pass</label>
+            <div class="col-md-3" data-bind="visible:ExedCommandStart.SshAuthType() == 'SSHAuthType_Password'">
+                <input name="txtsshpassword" class="form-input form-control" type="password" data-bind="value:ExedCommandStart.SshPassword" />
             </div>
-            <label class="col-md-2 filter-label" data-bind="visible:ExedCommand.SshAuthType() != 'SSHAuthType_Password'">Key Loc</label>
-            <div class="col-md-3" data-bind="visible:ExedCommand.SshAuthType() != 'SSHAuthType_Password'">
-                <input name="txtsshkeyloc" class="form-input form-control" type="text" data-bind="value:ExedCommand.SshKeyLocation" />
+            <label class="col-md-2 filter-label" data-bind="visible:ExedCommandStart.SshAuthType() != 'SSHAuthType_Password'">Key Loc</label>
+            <div class="col-md-3" data-bind="visible:ExedCommandStart.SshAuthType() != 'SSHAuthType_Password'">
+                <input name="txtsshkeyloc" class="form-input form-control" type="text" data-bind="value:ExedCommandStart.SshKeyLocation" />
             </div>
           </div>
 
           <div class="row">
             <label class="col-md-3 filter-label">Validation Start</label>
             <div class="col-md-8 dd-ping">
-              <input name="ddvaltype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ValidationType, value: ExedCommand.ValidationTypeStart}"/>
+              <input name="ddvaltype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ValidationType, value: ExedCommandStart.ValidationType}"/>
             </div>
           </div>
 
           <div class="row">
             <label class="col-md-3 filter-label">Value Start</label>
             <div class="col-md-8">
-              <input name="txtvalidationvalue" class="form-input form-control" data-bind="value:ExedCommand.ValidationValueStart"/>
+              <input name="txtvalidationvalue" class="form-input form-control" data-bind="value:ExedCommandStart.ValidationValue"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exed STOP -->
+        <div class="col-md-12" data-bind="visible:Home.ModeAdd() == 'EXEC COMMAND STOP'">
+          <div class="row">
+            <label class="col-md-3 filter-label">Type</label>
+            <div class="col-md-8 dd-ping">
+              <input name="ddexedtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ExedCommandType, value: ExedCommandStop.Type}"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_Local'">
+            <label class="col-md-3 filter-label">Command Text</label>
+            <div class="col-md-8">
+              <input name="txtcommand" class="form-input form-control" data-bind="value:ExedCommandStop.CommandText"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_SSH'">
+            <label class="col-md-3 filter-label">Command Stop</label>
+            <div class="col-md-8">
+              <input name="txtcommandstop" class="form-input form-control" data-bind="value:ExedCommandStop.CommandText"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_Local'">
+            <label class="col-md-3 filter-label">Command Stop</label>
+            <div class="col-md-8">
+              <input name="txtcommandparm" id="txtcommandparmexedstop" class="form-input form-control"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_REST'">
+            <label class="col-md-3 filter-label">Url Stop</label>
+            <div class="col-md-8">
+              <input name="txtresturl" class="form-input form-control" data-bind="value:ExedCommandStop.RestUrl"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_REST'">
+            <label class="col-md-3 filter-label">Rest Method</label>
+            <div class="col-md-8">
+              <input name="txtrestmethod" class="form-input form-control" data-bind="value:ExedCommandStop.RestMenthod"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_REST'">
+            <label class="col-md-3 filter-label">Auth Type</label>
+            <div class="col-md-8 dd-ping">
+              <input name="ddrestaunthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.RESTAuthType, value: ExedCommandStop.RestAuthType}"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_REST' && ExedCommandStop.RestAuthType() == 'RESTAuthType_Basic'">
+            <label class="col-md-3 filter-label">Rest User</label>
+            <div class="col-md-3">
+                <input name="txtrestuser" class="form-input form-control" type="text" data-bind="value:ExedCommandStop.RestUser" />
+            </div>
+            <label class="col-md-2 filter-label">Rest Pass</label>
+            <div class="col-md-3">
+                <input name="txtrestpass" class="form-input form-control" type="password" data-bind="value:ExedCommandStop.RestPassword" />
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_SSH'">
+            <label class="col-md-3 filter-label">SSH Host</label>
+            <div class="col-md-3">
+                <input name="txtSshHost" class="form-input form-control" type="text" data-bind="value:ExedCommandStop.SshHost" />
+            </div>
+            <label class="col-md-2 filter-label">SSH Port</label>
+            <div class="col-md-3">
+                <input name="txtSshPort" class="form-input form-control" type="text" data-bind="value:ExedCommandStop.SshPort" />
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_SSH'">
+            <label class="col-md-3 filter-label">Auth Type</label>
+            <div class="col-md-8 dd-ping">
+              <input name="ddsshauthtype" style="width:100%" data-bind="kendoDropDownList:{data:Home.SshAuthType, value: ExedCommandStop.SshAuthType}"/>
+            </div>
+          </div>
+
+          <div class="row" data-bind="visible:ExedCommandStop.Type() == 'CommandType_SSH'">
+            <label class="col-md-3 filter-label">SSH User</label>
+            <div class="col-md-3">
+                <input name="txtsshuser" class="form-input form-control" type="text" data-bind="value:ExedCommandStop.SshUser" />
+            </div>
+            <label class="col-md-2 filter-label" data-bind="visible:ExedCommandStop.SshAuthType() == 'SSHAuthType_Password'">SSH Pass</label>
+            <div class="col-md-3" data-bind="visible:ExedCommandStop.SshAuthType() == 'SSHAuthType_Password'">
+                <input name="txtsshpassword" class="form-input form-control" type="password" data-bind="value:ExedCommandStop.SshPassword" />
+            </div>
+            <label class="col-md-2 filter-label" data-bind="visible:ExedCommandStop.SshAuthType() != 'SSHAuthType_Password'">Key Loc</label>
+            <div class="col-md-3" data-bind="visible:ExedCommandStop.SshAuthType() != 'SSHAuthType_Password'">
+                <input name="txtsshkeyloc" class="form-input form-control" type="text" data-bind="value:ExedCommandStop.SshKeyLocation" />
             </div>
           </div>
 
           <div class="row">
-            <label class="col-md-3 filter-label">Validation Stop</label>
+            <label class="col-md-3 filter-label">Validation Type</label>
             <div class="col-md-8 dd-ping">
-              <input name="ddvaltype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ValidationType, value: ExedCommand.ValidationTypeStop}"/>
+              <input name="ddvaltype" style="width:100%" data-bind="kendoDropDownList:{data:Home.ValidationType, value: ExedCommandStop.ValidationType}"/>
             </div>
           </div>
 
           <div class="row">
             <label class="col-md-3 filter-label">Value Stop</label>
             <div class="col-md-8">
-              <input name="txtvalidationvalue" class="form-input form-control" data-bind="value:ExedCommand.ValidationValueStop"/>
+              <input name="txtvalidationvalue" class="form-input form-control" data-bind="value:ExedCommandStop.ValidationValue"/>
             </div>
           </div>
         </div>
@@ -478,9 +566,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-floppy-remove"></span> Cancel</button>
-        <button type="button" class="btn btn-warning" data-bind="visible:Home.ModeAdd() == 'Ping' || Home.ModeAdd() != 'Service',click:function(){NextBackAdd('Back')}"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
-        <button type="button" class="btn btn-primary" data-bind="visible:Home.ModeAdd() == 'Ping' || Home.ModeAdd() == 'Service', click:function(){NextBackAdd('Next')}"><span class="glyphicon glyphicon-chevron-right"></span> Next</button>
-        <button type="button" class="btn btn-primary" data-bind="visible:Home.ModeAdd() != 'Ping' && Home.ModeAdd() != 'Service',click:SaveService"><span class="glyphicon glyphicon-floppy-saved"></span> <span class="titleSave" data-bind="text:Home.ModeSave">Save</span></button>
+        <button type="button" class="btn btn-warning" data-bind="visible:Home.ModeAdd() == 'Ping' || Home.ModeAdd() != 'Service' || Home.ModeAdd() == 'EXEC COMMAND START',click:function(){NextBackAdd('Back')}"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
+        <button type="button" class="btn btn-primary" data-bind="visible:Home.ModeAdd() == 'Ping' || Home.ModeAdd() == 'Service' || Home.ModeAdd() == 'EXEC COMMAND START', click:function(){NextBackAdd('Next')}"><span class="glyphicon glyphicon-chevron-right"></span> Next</button>
+        <button type="button" class="btn btn-primary" data-bind="visible:Home.ModeAdd() != 'Ping' && Home.ModeAdd() != 'Service' && Home.ModeAdd() != 'EXEC COMMAND START',click:SaveService"><span class="glyphicon glyphicon-floppy-saved"></span> <span class="titleSave" data-bind="text:Home.ModeSave">Save</span></button>
       </div>
     </div>
   </div>
@@ -497,8 +585,9 @@
         <!-- Content Detail Service -->
         <div class="row">
           <div class="col-md-12">
-            <button class="btn btn-sm btn-success space-right" data-bind="click:function(){Home.ServiceStart(Service.ID())}"><span class="glyphicon glyphicon-play"></span> Start</button>
+            <button class="btn btn-sm btn-success space-right" data-bind="click:function(){Home.DetailService(Service.ID(),'Start', Home.IndexService())}"><span class="glyphicon glyphicon-play"></span> Start</button>
             <button class="btn btn-sm btn-danger space-right" data-bind="click:function(){Home.ServiceStop(Service.ID())}"><span class="glyphicon glyphicon-stop"></span> Stop</button>
+            <button class="btn btn-sm btn-danger space-right" data-bind="click:function(){Home.StopServer(Service.ID())}"><span class="glyphicon glyphicon-stop"></span> Stop Server</button>
             <button class="btn btn-sm btn-warning space-right" data-bind="click:Home.Log"><span class="glyphicon glyphicon-list-alt"></span> Log</button>
             <button class="btn btn-sm btn-info space-right" data-bind="click:function(){Home.EditService('Detail')}"><span class="glyphicon glyphicon-pencil"></span> Update</button>
             <button class="btn btn-sm btn-danger space-right" data-bind="click:function(){Home.RemoveService(Service.ID())}"><span class="glyphicon glyphicon-trash"></span> Remove</button>
@@ -527,18 +616,147 @@
 <!-- <script src="/static/gridlib/js/main.js"></script> -->
 
 <script>
+  Home.validationField = function(val){
+    if (val === 'Save'){
+      var boolVal = true;
+      if (Home.RecordServiceNew.Service.Title() == "")
+        boolVal = false;
+      return boolVal;
+    } else {
+      // Service
+      var ServiceVal = new Array(), PingVal = new Array(), ExecStartVal = new Array(), ExecStopVal = new Array(), typePing = Home.RecordServiceNew.Ping.Type(), typeExecStart = Home.RecordServiceNew.ExedCommandStart.Type(), typeExecStop = Home.RecordServiceNew.ExedCommandStop.Type(), StringValidation = "";
+      $.each( Home.RecordServiceNew.Service, function( key, value ) {
+        if (key !== 'EmailWarning' && key !== 'EmailError' && key !== 'RestartAfterNCritical' && key !== 'Interval' && key !== 'PathLog' && key !== 'StatusService'){
+          if (value() === '')
+            ServiceVal.push(key);
+        } else if (key === 'EmailWarning' || key == 'EmailError'){
+          if (value().length == 0)
+            ServiceVal.push(key);
+        } else if (key === 'RestartAfterNCritical' || key === 'Interval'){
+          if (value() == 0)
+            ServiceVal = 0;
+        }
+      });
+      // Ping
+      $.each( Home.RecordServiceNew.Ping, function( key, value ) {
+        if (typePing === 'PingType_Network' || typePing === 'PingType_HttpStatus' && key != 'Type'){
+          if (key === 'Host' || key === 'Port'){
+            if (value() === '')
+              PingVal.push(key);
+          }
+        } else if (typePing === 'PingType_HttpBody' && key != 'Type'){
+          if (key === 'Host' || key === 'Port' || key === 'HttpBodySearch'){
+            if (value() === '')
+              PingVal.push(key);
+          }
+        } else if (typePing === 'PingType_Command' && key != 'Type'){
+          if (key === 'Command' || key === 'ResponseValue'){
+            if (value() === '')
+              PingVal.push(key);
+          }
+          else if (key === 'CommandParm' && value().length === 0)
+            PingVal.push(key);
+        }
+      });
+      // Exec Start
+      $.each( Home.RecordServiceNew.ExedCommandStart, function( key, value ) {
+        if (typeExecStart === 'CommandType_Local' && key != 'Type'){
+          if (key === 'CommandText' && value() === '')
+            ExecStartVal.push(key);
+          else if (key === 'CommandParm' && value().length === 0)
+            ExecStartVal.push(key);
+        } else if (typeExecStart === 'CommandType_SSH' && key != 'Type'){
+          if (key === 'CommandTextSsh' || key === 'SshHost' || key === 'SshPort'){
+            if (value() === '')
+              ExecStartVal.push(key);
+          }
+          else if (key === 'SshAuthType' && value() === 'SSHAuthType_Password'){
+            if (key === 'SshPassword' && value() === '')
+              ExecStartVal.push(key);
+          } else if (key === 'SshAuthType' && value() === 'SSHAuthType_Certificate'){
+            if (key === 'SshKeyLocation' && value() === '')
+              ExecStartVal.push(key);
+          }
+        } else if (typeExecStart === 'CommandType_REST' && key != 'Type'){
+          if (key === 'RestUrl' || key === 'RestMenthod'){
+            if (value() === '')
+              ExecStartVal.push(key);
+          }
+          else if (key === 'RestAuthType' && value() !== 'RESTAuthType_None'){
+            if (key === 'RestUser' || key === 'RestPassword'){
+              if (value() === '')
+                ExecStartVal.push(key);
+            }
+          }
+        }
+        if (key === 'ValidationValue' && value() === '')
+          ExecStartVal.push(key);
+      });
+      // Exec Stop
+      $.each( Home.RecordServiceNew.ExedCommandStop, function( key, value ) {
+        if (typeExecStart === 'CommandType_Local' && key != 'Type'){
+          if (key === 'CommandText' && value() === '')
+            ExecStopVal.push(key);
+          else if (key === 'CommandParm' && value().length === 0)
+            ExecStopVal.push(key);
+        } else if (typeExecStart === 'CommandType_SSH' && key != 'Type'){
+          if (key === 'CommandTextSsh' || key === 'SshHost' || key === 'SshPort'){
+            if (value() === '')
+              ExecStopVal.push(key);
+          }
+          else if (key === 'SshAuthType' && value() === 'SSHAuthType_Password'){
+            if (key === 'SshPassword' && value() === '')
+              ExecStopVal.push(key);
+          } else if (key === 'SshAuthType' && value() === 'SSHAuthType_Certificate'){
+            if (key === 'SshKeyLocation' && value() === '')
+              ExecStopVal.push(key);
+          }
+        } else if (typeExecStart === 'CommandType_REST' && key != 'Type'){
+          if (key === 'RestUrl' || key === 'RestMenthod'){
+            if (value() === '')
+              ExecStopVal.push(key);
+          }
+          else if (key === 'RestAuthType' && value() !== 'RESTAuthType_None'){
+            if (key === 'RestUser' || key === 'RestPassword'){
+              if (value() === '')
+                ExecStopVal.push(key);
+            }
+          }
+        }
+        if (key === 'ValidationValue' && value() === '')
+          ExecStopVal.push(key);
+      });
+
+      if (ServiceVal.length > 0){
+        StringValidation += "Service : " +ServiceVal.join(",") + "\n";
+      }
+      if (PingVal.length > 0){
+        StringValidation += "Ping : " + PingVal.join(",") + "\n";
+      }
+      if (ExecStartVal.length > 0){
+        StringValidation += "Exec Start : " + ExecStartVal.join(",") + "\n";
+      }
+      if (ExecStopVal.length > 0){
+        StringValidation += "Exec Stop : " + ExecStopVal.join(",") + "\n";
+      }
+      return StringValidation;
+    }
+  }
   Home.AddService = function(){
     Home.ModeSave('Save');
     ko.mapping.fromJS(modelServiceNew, Home.RecordServiceNew);
     $("#txtcommandparmping").tokenInput('clear');
     $("#txtcommandparmexedstart").tokenInput('clear');
     $("#txtcommandparmexedstop").tokenInput('clear');
+    $("#txtemailerror").tokenInput('clear');
+    $("#txtemailwarning").tokenInput('clear');
     Home.ModeAdd('Service');
     $('#modalAddService').modal('show');
   }
   Home.SaveService = function(){
     $('#modalAddService').modal('hide');
-    if(Home.RecordServiceNew.Service.StatusService() != 'Start'){
+    var validationSave = Home.validationField('Save');
+    if(Home.RecordServiceNew.Service.StatusService() != 'Start' && validationSave == true){
       Home.Processing(true);
       var url = "/home/addservice";
       if(Home.ModeSave() === 'Update')
@@ -553,10 +771,16 @@
         Home.RecordServiceNew.Ping.CommandParm.push($("#txtcommandparmping").tokenInput('get')[key].name);
       }
       for(var key in $("#txtcommandparmexedstart").tokenInput('get')){
-        Home.RecordServiceNew.ExedCommand.CommandParmStart.push($("#txtcommandparmexedstart").tokenInput('get')[key].name);
+        Home.RecordServiceNew.ExedCommandStart.CommandParm.push($("#txtcommandparmexedstart").tokenInput('get')[key].name);
       }
       for(var key in $("#txtcommandparmexedstop").tokenInput('get')){
-        Home.RecordServiceNew.ExedCommand.CommandParmStop.push($("#txtcommandparmexedstop").tokenInput('get')[key].name);
+        Home.RecordServiceNew.ExedCommandStop.CommandParm.push($("#txtcommandparmexedstop").tokenInput('get')[key].name);
+      }
+      for(var key in $("#txtemailwarning").tokenInput('get')){
+        Home.RecordServiceNew.Service.EmailWarning.push($("#txtemailwarning").tokenInput('get')[key].name);
+      }
+      for(var key in $("#txtemailerror").tokenInput('get')){
+        Home.RecordServiceNew.Service.EmailError.push($("#txtemailerror").tokenInput('get')[key].name);
       }
       $.ajax({
         url: url,
@@ -575,7 +799,10 @@
         },
       });
     } else {
-      alert('You must stop service before update service !');
+      if (validationSave == false)
+        alert('Please Input Service Title !');
+      else
+        alert('You must stop service before update service !');
     }
   }
   Home.GetService = function(){
@@ -585,11 +812,19 @@
       url: url,
       type: 'post',
       dataType: 'json',
-      data : {},
+      data : {Statuslive:"Start"},
       success : function(res) {
         if(res.success){
           Home.Processing(false);
           Home.RecordServices(_.map(res.data, function (r) { return ko.mapping.fromJS(r); }));
+          // for (var key in res.data){
+          //   if (res.data[key].Service.StatusService === 'Start'){
+          //     if (res.data[key].Service.LogStatus !== 'Success' || res.data[key].Service.LogStatus !== 'OK' || res.data[key].Service.LogStatus() !== 'Fail' || res.data[key].Service.LogStatus !== 'Error'){  
+          //       // console.log(Home.RecordServices()[key].Service.LogStatus());
+          //       setTimeout(function() { Home.ServiceStart(res.data[key].Service.ID,'Live', key, 'Grid'); }, 1000);
+          //     }
+          //   }
+          // }
         }else{
           alert(res.message);
           Home.Processing(false);
@@ -598,7 +833,6 @@
     });
   }
   Home.RemoveService = function(idService){
-    // console.log(idService);
     if (confirm("Are you sure remove this !") == true) {
         Home.Processing(true);
         var url = "/home/removeservice";
@@ -619,9 +853,9 @@
         });
     }
   }
-  Home.DetailService = function(idService, valview){
+  Home.DetailService = function(idService, valview, indexSer){
     // console.log(idService);
-    // Home.IndexService(indexService);
+    Home.IndexService(indexSer);
     var url = "/home/getdetailservice";
     $.ajax({
       url: url,
@@ -637,7 +871,9 @@
             Home.EditService(valview);
           } else if(valview == 'Log'){
             Home.Log();
-          }else {
+          } else if (valview == 'Start') {
+            Home.ServiceStart(idService,'Start', Home.IndexService(), 'Detail');
+          } else {
             $('#modalDetailService').modal('show');
           }
         }else{
@@ -658,27 +894,43 @@
   }
   Home.NextBackAdd = function(data){
     if(data === 'Next' && Home.ModeAdd() === 'Ping')
-      Home.ModeAdd('EXEC COMMAND');
+      Home.ModeAdd('EXEC COMMAND START');
     else if (data === 'Next' && Home.ModeAdd() === 'Service')
       Home.ModeAdd('Ping');
+    else if (data === 'Next' && Home.ModeAdd() === 'EXEC COMMAND START')
+      Home.ModeAdd('EXEC COMMAND STOP');
     else if (data === 'Back' && Home.ModeAdd() === 'Ping')
       Home.ModeAdd('Service');
+    else if (data === 'Back' && Home.ModeAdd() === 'EXEC COMMAND STOP')
+      Home.ModeAdd('EXEC COMMAND START');
     else
       Home.ModeAdd('Ping');
   }
-  Home.ServiceStart = function(idService){
-    // Home.Processing(true);
-    var url = "/home/startservice";
-    $.ajax({
-      url: url,
-      type: 'post',
-      dataType: 'json',
-      data : {Status: 'Start', ID: idService},
-      success : function(res) {
-          $('#modalDetailService').modal('hide');
-          Home.GetService();
-      },
-    });
+  Home.ServiceStart = function(idService, statusLive, indexSer, statusCheck){
+    // console.log(indexSer);
+    var validationStart = Home.validationField('Start');
+    if (validationStart == '' || statusCheck == 'Grid'){
+      var url = "/home/startservice";
+      $.ajax({
+        url: url,
+        type: 'post',
+        dataType: 'json',
+        data : {Status: 'Start', ID: idService, Statuslive : statusLive},
+        success : function(res) {
+            Home.ArrService()[indexSer].Service.LogStatus(res.data);
+            if (res.data === 'OK' || res.data === 'Fail' || res.data === 'Error'){
+              $('#modalDetailService').modal('hide');
+              if (statusCheck != 'Grid')
+                Home.GetService();
+            } else {
+              var StatusService = statusCheck;
+              setTimeout(function() { Home.ServiceStart(idService,'Live', indexSer, StatusService); }, 1000);
+            }
+        },
+      });
+    } else {
+      alert("Field Can't be Null !! \n" + validationStart);
+    }
   }
   Home.ServiceStop = function(idService){
     var url = "/home/stopservice";
@@ -698,25 +950,26 @@
     $("#txtcommandparmping").tokenInput('clear');
     $("#txtcommandparmexedstart").tokenInput('clear');
     $("#txtcommandparmexedstop").tokenInput('clear');
+    $("#txtemailerror").tokenInput('clear');
+    $("#txtemailwarning").tokenInput('clear');
 
-    // var searchElem = ko.utils.arrayFilter(Home.RecordServices(),function (item) {
-    //   return item.Service.ID() === idService;
-    // });
     if(valview === 'Detail')
       $('#modalDetailService').modal('hide');
-
-    // if (searchElem.length > 0){
-      // ko.mapping.fromJS(searchElem[0], Home.RecordServiceNew);
     for (var key in Home.RecordServiceNew.Ping.CommandParm()){
       $("#txtcommandparmping").tokenInput("add", {id: Home.RecordServiceNew.Ping.CommandParm()[key], name: Home.RecordServiceNew.Ping.CommandParm()[key]});
     }
-    for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStart()){
-      $("#txtcommandparmexedstart").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStart()[key]});
+    for (var key in Home.RecordServiceNew.ExedCommandStart.CommandParm()){
+      $("#txtcommandparmexedstart").tokenInput("add", {id: Home.RecordServiceNew.ExedCommandStart.CommandParm()[key], name: Home.RecordServiceNew.ExedCommandStart.CommandParm()[key]});
     }
-    for (var key in Home.RecordServiceNew.ExedCommand.CommandParmStop()){
-      $("#txtcommandparmexedstop").tokenInput("add", {id: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key], name: Home.RecordServiceNew.ExedCommand.CommandParmStop()[key]});
+    for (var key in Home.RecordServiceNew.ExedCommandStop.CommandParm()){
+      $("#txtcommandparmexedstop").tokenInput("add", {id: Home.RecordServiceNew.ExedCommandStop.CommandParm()[key], name: Home.RecordServiceNew.ExedCommandStop.CommandParm()[key]});
     }
-    // }
+    for (var key in Home.RecordServiceNew.Service.EmailWarning()){
+      $("#txtemailwarning").tokenInput("add", {id: Home.RecordServiceNew.Service.EmailWarning()[key], name: Home.RecordServiceNew.Service.EmailWarning()[key]});
+    }
+    for (var key in Home.RecordServiceNew.Service.EmailError()){
+      $("#txtemailerror").tokenInput("add", {id: Home.RecordServiceNew.Service.EmailError()[key], name: Home.RecordServiceNew.Service.EmailError()[key]});
+    }
     Home.ModeAdd('Service');
     $('#modalAddService').modal('show');
   }
@@ -731,10 +984,6 @@
           var ks = res.data.split("\n"), arrLog = new Array();
           $.each(ks, function(k){
             if (ks[k] != ""){
-              // var a = ks[k].substr(0,ks[k].indexOf(' '));
-              // console.log(a);
-              // var a = ks[k].match(/^(\S+)\s(.*)/).slice(1);
-              // console.log(a[0]);
               var a = ks[k].split(' ');
               b = ks[k].match(/\[(.*)\]/).pop();
               arrLog.push({
@@ -754,6 +1003,19 @@
       },
     });
   }
+  Home.StopServer = function(){
+    var url = "/home/stopserver";
+    $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data : {ID: idService},
+      success : function(res) {
+          $('#modalDetailService').modal('hide');
+          Home.GetService();
+      },
+    });
+  }
 
   Home.ArrService = ko.computed(function () {
     var search = Home.filterKeyword();
@@ -766,7 +1028,6 @@
 
 	$(document).ready(function(){
     Home.GetService();
-
     $("#txtcommandparmping").tokenInput([], { 
       noResultsText: "Add New Command",
       theme: "facebook",
@@ -780,6 +1041,19 @@
       allowFreeTagging: true,
     });
     $("#txtcommandparmexedstop").tokenInput([], { 
+      noResultsText: "Add New Command",
+      theme: "facebook",
+      zindex: 9999,
+      allowFreeTagging: true,
+    });
+
+    $("#txtemailwarning").tokenInput([], { 
+      noResultsText: "Add New Command",
+      theme: "facebook",
+      zindex: 9999,
+      allowFreeTagging: true,
+    });
+    $("#txtemailerror").tokenInput([], { 
       noResultsText: "Add New Command",
       theme: "facebook",
       zindex: 9999,

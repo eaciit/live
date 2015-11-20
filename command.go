@@ -13,6 +13,7 @@ type ValidationTypeEnum int
 type RESTAuthTypeEnum int
 
 const (
+	// inisialisation constanta for type execution
 	CommandType_Local CommandTypeEnum = 1
 	CommandType_SSH   CommandTypeEnum = 2
 	CommandType_REST  CommandTypeEnum = 3
@@ -28,23 +29,28 @@ const (
 type Command struct {
 	Type CommandTypeEnum
 
-	//--- these attributes are used for local command
+	// these attributes are used for local command
 	CommandText  string
 	CommandParms []string
 
+	// these attributes are used for REST
 	RESTUrl      string
 	RESTMethod   string
 	RESTUser     string
 	RESTPassword string
 	RESTAuthType RESTAuthTypeEnum
 
-	//--- attributes used for SSH
-	SshClient *SshParm
+	// these attributes used for SSH
+	SshClient *SshSetting
 
+	// these attributes used for validation after command
 	ValidationType  ValidationTypeEnum
 	ValidationValue string
 }
 
+/*
+Validation message after command execute
+*/
 func (c *Command) Validate(res string) error {
 	if c.ValidationType == ValidationType_Equal {
 		if res != c.ValidationValue {
@@ -64,6 +70,9 @@ func (c *Command) Validate(res string) error {
 	return nil
 }
 
+/*
+Execute command depend on type that has been declared before
+*/
 func (c *Command) Exec() (string, error) {
 	var (
 		res     string
