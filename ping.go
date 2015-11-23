@@ -96,7 +96,7 @@ func (p *Ping) checkNetwork() error {
 Ping service over http status
 */
 func (p *Ping) checkHttpStatus() error {
-	r, e := toolkit.HttpCall(p.Host, "GET", nil, false, "", "")
+	r, e := toolkit.HttpCall(p.Host, "GET", nil, nil)
 	p.LastStatus = "Fail"
 	if e != nil {
 		return fmt.Errorf("Unable to access %s, %s", p.Host, e.Error())
@@ -113,7 +113,7 @@ Ping service over http body and validate response
 */
 func (p *Ping) checkHttpBody() error {
 	p.LastStatus = "Fail"
-	r, e := toolkit.HttpCall(p.Host, "GET", nil, false, "", "")
+	r, e := toolkit.HttpCall(p.Host, "GET", nil, nil)
 	if e != nil {
 		return e
 	}

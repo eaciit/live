@@ -98,9 +98,11 @@ func (c *Command) Exec() (string, error) {
 
 	} else if c.Type == CommandType_REST {
 		if c.RESTAuthType == RESTAuthType_None {
-			httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, false, "", "")
+			httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, nil)
 		} else if c.RESTAuthType == RESTAuthType_Basic {
-			httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, true, c.RESTUser, c.RESTPassword)
+			var config = map[string]interface{}{"auth": "basic", "user": c.RESTUser, "password": c.RESTPassword}
+			httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, config)
+			// httpRes, e = toolkit.HttpCall(c.RESTUrl, c.RESTMethod, nil, true, c.RESTUser, c.RESTPassword)
 		}
 		res = toolkit.HttpContentString(httpRes)
 	}
