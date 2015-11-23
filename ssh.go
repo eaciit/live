@@ -1,11 +1,12 @@
 package live
 
+//Handle all ssh connection in package LIVE
+
 import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
-	//	"path"
 	"strings"
 	"sync"
 )
@@ -13,11 +14,13 @@ import (
 type SSHAuthTypeEnum int
 
 const (
+	//Type authentication login in ssh, it can using password or using public-private key
 	SSHAuthType_Password SSHAuthTypeEnum = iota
 	SSHAuthType_Certificate
 )
 
-type SshParm struct {
+type SshSetting struct {
+	//Setting information for ssh connection
 	SSHHost        string
 	SSHUser        string
 	SSHPassword    string
@@ -25,6 +28,9 @@ type SshParm struct {
 	SSHAuthType    SSHAuthTypeEnum
 }
 
+/*
+Parsing private key certicate using for connection over ssh
+*/
 func PublicKeyFile(file string) ssh.AuthMethod {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -38,7 +44,10 @@ func PublicKeyFile(file string) ssh.AuthMethod {
 	return ssh.PublicKeys(key)
 }
 
-func (S *SshParm) Connect() (*ssh.Client, error) {
+/*
+Build connection ssh client to ssh server
+*/
+func (S *SshSetting) Connect() (*ssh.Client, error) {
 	var (
 		cfg *ssh.ClientConfig
 	)
@@ -64,6 +73,9 @@ func (S *SshParm) Connect() (*ssh.Client, error) {
 
 }
 
+/*
+Handle input and output into terminal using channel
+*/
 func TermInOut(w io.Writer, r io.Reader) (chan<- string, <-chan string) {
 	in := make(chan string, 1)
 	out := make(chan string, 1)
@@ -99,7 +111,10 @@ func TermInOut(w io.Writer, r io.Reader) (chan<- string, <-chan string) {
 	return in, out
 }
 
-func (S *SshParm) RunCommandSsh(cmds ...string) (string, error) {
+/*
+Build connection and run ssh script, catch the output or give error message if any
+*/
+func (S *SshSetting) RunCommandSsh(cmds ...string) (string, error) {
 	var (
 		res string
 		err error
@@ -152,9 +167,6 @@ func (S *SshParm) RunCommandSsh(cmds ...string) (string, error) {
 		cmdtemp = cmd
 	}
 	Ses.Wait()
-	/*	if strings.ContainsAny(res, "Output of") {
-		err = fmt.Errorf("Command Fail Found")
-	}*/
 
 	return res, err
 }

@@ -19,9 +19,50 @@ type Service struct {
 }
 
 type ServiceNew struct {
-	Service     ServiceModel `json:"Service"`
-	Ping        Ping         `json:"Ping"`
-	ExedCommand ExedCommand  `json:"ExedCommand"`
+	Service          ServiceModel     `json:"Service"`
+	Ping             Ping             `json:"Ping"`
+	ExedCommandStart ExedCommandStart `json:"ExedCommandStart"`
+	ExedCommandStop  ExedCommandStop  `json:"ExedCommandStop"`
+}
+
+type ExedCommandStart struct {
+	Type            string   `json:"Type"`
+	CommandText     string   `json:"CommandText"`
+	CommandTextSsh  string   `json:"CommandTextSsh"`
+	CommandParm     []string `json:"CommandParm"`
+	RestUrl         string   `json:"RestUrl"`
+	RestMenthod     string   `json:"RestMenthod"`
+	RestUser        string   `json:"RestUser"`
+	RestPassword    string   `json:"RestPassword"`
+	RestAuthType    string   `json:"RestAuthType"`
+	SshHost         string   `json:"SshHost"`
+	SshPort         string   `json:"SshPort"`
+	SshUser         string   `json:"SshUser"`
+	SshPassword     string   `json:"SshPassword"`
+	SshKeyLocation  string   `json:"SshKeyLocation"`
+	SshAuthType     string   `json:"SshAuthType"`
+	ValidationType  string   `json:"ValidationType"`
+	ValidationValue string   `json:"ValidationValue"`
+}
+
+type ExedCommandStop struct {
+	Type            string   `json:"Type"`
+	CommandText     string   `json:"CommandText"`
+	CommandTextSsh  string   `json:"CommandTextSsh"`
+	CommandParm     []string `json:"CommandParm"`
+	RestUrl         string   `json:"RestUrl"`
+	RestMenthod     string   `json:"RestMenthod"`
+	RestUser        string   `json:"RestUser"`
+	RestPassword    string   `json:"RestPassword"`
+	RestAuthType    string   `json:"RestAuthType"`
+	SshHost         string   `json:"SshHost"`
+	SshPort         string   `json:"SshPort"`
+	SshUser         string   `json:"SshUser"`
+	SshPassword     string   `json:"SshPassword"`
+	SshKeyLocation  string   `json:"SshKeyLocation"`
+	SshAuthType     string   `json:"SshAuthType"`
+	ValidationType  string   `json:"ValidationType"`
+	ValidationValue string   `json:"ValidationValue"`
 }
 
 type ServiceModel struct {
@@ -33,6 +74,9 @@ type ServiceModel struct {
 	PathLog               string    `json:"PathLog"`
 	TypeLog               string    `json:"TypeLog"`
 	StatusService         string    `json:"StatusService"`
+	EmailWarning          []string  `json:"EmailWarning"`
+	EmailError            []string  `json:"EmailError"`
+	LogStatus             string    `json:"LogStatus"`
 	DateStatus            time.Time `json:"DateStatus"`
 	LastUpdate            time.Time `json:"LastUpdate"`
 }
