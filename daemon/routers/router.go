@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"github.com/eaciit/live/daemon/webapp/controllers"
+	"github.com/eaciit/live/daemon/controllers"
 
 	"github.com/astaxie/beego"
 )
